@@ -68,8 +68,8 @@ Agent 使用 **LangGraph** 构建状态机。五个节点通过条件边连接�
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/yourname/smart-data-analyst-agent.git
-cd smart-data-analyst-agent
+git clone https://github.com/slw-cuddlebear/Smart_Sata_Analyst_Agent.git
+cd Smart_Sata_Analyst_Agent
 ```
 
 ### 2. 创建虚拟环境
@@ -208,7 +208,7 @@ python main.py
 ## 📁 项目结构
 
 ```
-smart-data-analyst-agent/
+Smart_Sata_Analyst_Agent/
 ├── .env                       # 本地配置（不提交）
 ├── .env.example               # 配置模板
 ├── requirements.txt
