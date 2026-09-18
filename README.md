@@ -11,7 +11,6 @@
 ![Web 界面](docs/img_web.png)
 ![img.png](img.png)
 
-> 截图待补。建议在 docs/ 下放 2~3 张：主页、图表结果、LangSmith trace。
 
 ## ✨ 功能特性
 
