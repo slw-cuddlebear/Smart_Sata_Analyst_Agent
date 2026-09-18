@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+data/uploads/
+outputs/
+data/*.db
+.idea/
+.vscode/
+*.log
+.DS_Store
+data/datasources.json
+

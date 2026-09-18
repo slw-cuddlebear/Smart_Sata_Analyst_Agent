@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>智数析言 · 智能数据分析 Agent</title>
+<script src="/web/vendor/vue.global.prod.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: #f1f5f9; color: #1e293b;
+    min-height: 100vh; line-height: 1.6;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 16px; }
+  .grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+  h1 { font-size: 28px; font-weight: 700; color: #0f172a; }
+  .subtitle { color: #64748b; font-size: 14px; margin-top: 4px; }
+
+  .card {
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    padding: 20px; margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 12px; font-weight: 600;
+    color: #2563eb; margin-bottom: 10px; letter-spacing: .5px;
+  }
+
+  textarea {
+    width: 100%; resize: none;
+    border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 12px; font-size: 14px;
+    font-family: inherit; color: #334155;
+    outline: none; transition: border-color .2s;
+  }
+  textarea:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,.15); }
+
+  .row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+  .hint { font-size: 12px; color: #94a3b8; }
+
+  button {
+    border: none; border-radius: 10px;
+    padding: 9px 20px; cursor: pointer;
+    font-size: 14px; font-weight: 500;
+    background: #2563eb; color: #fff;
+    transition: background .2s;
+  }
+  button:hover:not(:disabled) { background: #1d4ed8; }
+  button:disabled { background: #cbd5e1; cursor: not-allowed; }
+  button.small { padding: 5px 12px; font-size: 12px; background: #eff6ff; color: #2563eb; }
+  button.small:hover { background: #dbeafe; }
+  button.danger { background: #fef2f2; color: #b91c1c; }
+  button.danger:hover { background: #fee2e2; }
+
+  select {
+    padding: 8px 12px; border-radius: 10px;
+    border: 1px solid #e2e8f0; font-size: 14px;
+    background: #fff; color: #334155;
+    outline: none; cursor: pointer;
+    min-width: 220px;
+  }
+  select:focus { border-color: #60a5fa; }
+
+  .ds-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px; background: #fff;
+    border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .ds-bar .label { font-size: 13px; color: #64748b; font-weight: 500; }
+
+  .error {
+    background: #fef2f2; color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: 12px; padding: 14px; margin-bottom: 16px;
+    font-size: 14px;
+  }
+
+  .mono { font-family: Consolas, Monaco, "Courier New", monospace; }
+  pre {
+    white-space: pre-wrap; word-break: break-all;
+    font-size: 13px; color: #334155;
+    background: #f8fafc; border-radius: 8px;
+    padding: 12px; overflow-x: auto;
+    font-family: Consolas, Monaco, monospace;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f8fafc; color: #475569; text-align: left; padding: 8px 12px; font-weight: 500; white-space: nowrap; }
+  td { padding: 8px 12px; border-top: 1px solid #f1f5f9; color: #334155; white-space: nowrap; }
+  tr:hover td { background: #f8fafc; }
+  .scroll-x { overflow-x: auto; }
+
+  details { margin-bottom: 16px; }
+  summary { cursor: pointer; user-select: none; }
+
+  .history-list { list-style: none; }
+  .history-list li {
+    font-size: 12px; color: #475569;
+    border-left: 2px solid #e2e8f0;
+    padding: 8px 10px; margin-bottom: 8px;
+    cursor: pointer;
+    border-radius: 0 8px 8px 0;
+    transition: all .15s;
+    word-break: break-all;
+  }
+  .history-list li:hover { background: #f8fafc; border-left-color: #93c5fd; }
+  .history-list li.active {
+    background: #eff6ff;
+    border-left-color: #2563eb;
+  }
+  .history-list li .q { font-weight: 500; color: #1e293b; margin-bottom: 2px; }
+  .history-list li .a { color: #94a3b8; font-size: 11px; }
+  .history-list li .time { color: #cbd5e1; font-size: 10px; margin-top: 2px; }
+
+  .empty { text-align: center; color: #94a3b8; padding: 64px 0; font-size: 14px; }
+  .fade-in { animation: fade .3s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .chart-img { width: 100%; border-radius: 8px; border: 1px solid #f1f5f9; }
+
+  .q-banner {
+    padding: 12px 16px; background: #f8fafc;
+    border-radius: 10px; margin-bottom: 16px;
+    font-size: 15px; color: #0f172a; font-weight: 500;
+    border-left: 3px solid #2563eb;
+  }
+</style>
+</head>
+<body>
+
+<div id="app" class="container">
+  <div class="grid">
+
+    <!-- 左侧历史 -->
+    <aside class="card" style="height: fit-content; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div style="font-weight: 600; color: #1e293b; font-size: 14px;">对话历史</div>
+        <button class="small" @click="newSession">新对话</button>
+      </div>
+      <div v-if="currentRecords.length === 0" class="hint">暂无历史</div>
+      <ul v-else class="history-list">
+        <li
+          v-for="(h, i) in currentRecords"
+          :key="i"
+          :class="{ active: i === activeIndex }"
+          @click="selectRecord(i)"
+        >
+          <div class="q">{{ h.question }}</div>
+          <div class="a">{{ (h.result.conclusion || '').slice(0, 40) }}...</div>
+          <div class="time">{{ formatTime(h.time) }}</div>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- 右侧主区 -->
+    <main>
+      <header style="margin-bottom: 20px;">
+        <h1>智数析言</h1>
+        <p class="subtitle">用自然语言提问 · SQL 查询 · Python 分析 · 图表 · 结论</p>
+      </header>
+
+      <!-- 数据源栏 -->
+      <div class="ds-bar">
+        <span class="label">数据源</span>
+        <select v-model="datasourceId" @change="onDatasourceChange">
+          <option v-for="ds in datasources" :key="ds.id" :value="ds.id">
+            {{ ds.name }}
+          </option>
+        </select>
+
+        <button class="small" @click="triggerUpload" :disabled="uploading">
+          {{ uploading ? '上传中…' : '+ 上传 CSV / Excel' }}
+        </button>
+        <input
+          ref="fileInput"
+          type="file"
+          accept=".csv,.xlsx,.xls"
+          style="display: none;"
+          @change="onFileChange"
+        />
+
+        <button
+          v-if="currentDs && !currentDs.builtin"
+          class="small danger"
+          @click="deleteCurrentDs"
+        >删除当前数据源</button>
+
+        <span class="hint" style="margin-left: auto;">会话 {{ sessionId }}</span>
+      </div>
+
+      <!-- 输入框 -->
+      <div class="card">
+        <textarea
+          v-model="question"
+          @keydown.enter.exact.prevent="submit"
+          rows="2"
+          placeholder="例如：按月的销售趋势用折线图展示。（支持追问，如“那华东呢？”）"
+        ></textarea>
+        <div class="row">
+          <span class="hint">Enter 发送 · Shift+Enter 换行</span>
+          <button @click="submit" :disabled="loading || !question.trim()">
+            {{ loading ? '分析中…' : '发送' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- 错误 -->
+      <div v-if="errorMsg" class="error">{{ errorMsg }}</div>
+
+      <!-- 结果 -->
+      <div v-if="result" class="fade-in">
+        <!-- 当前问题 -->
+        <div class="q-banner">{{ currentRecords[activeIndex]?.question }}</div>
+
+        <!-- 分析结论 -->
+        <div class="card">
+          <div class="card-title">分析结论</div>
+          <div style="white-space: pre-wrap; color: #1e293b;">{{ result.conclusion }}</div>
+        </div>
+
+        <!-- 图表 -->
+        <div v-if="result.chart_url" class="card">
+          <div class="card-title">图表</div>
+          <img :src="result.chart_url" alt="分析图表" class="chart-img" />
+        </div>
+
+        <!-- Python 分析结果（结构化渲染） -->
+        <div v-if="pyResult" class="card">
+          <div class="card-title">Python 分析结果</div>
+
+          <!-- 表格类型 -->
+          <div v-if="pyResult.type === 'table'" class="scroll-x">
+            <table>
+              <thead>
+                <tr><th v-for="col in pyResult.columns" :key="col">{{ col }}</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, i) in pyResult.rows" :key="i">
+                  <td v-for="col in pyResult.columns" :key="col" class="mono">{{ formatCell(row[col]) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- JSON 类型 -->
+          <pre v-else-if="pyResult.type === 'json'">{{ JSON.stringify(pyResult.value, null, 2) }}</pre>
+
+          <!-- 文本类型（含旧版本地历史兼容） -->
+          <pre v-else>{{ pyResult.value }}</pre>
+        </div>
+
+        <!-- 数据结果 -->
+        <div v-if="result.data && result.data.length" class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div class="card-title" style="margin: 0;">数据结果</div>
+            <div class="hint">
+              共 {{ result.data_count }} 行
+              <span v-if="result.data_truncated">（仅展示前 {{ result.data.length }} 行）</span>
+            </div>
+          </div>
+          <div class="scroll-x">
+            <table>
+              <thead><tr><th v-for="col in dataColumns" :key="col">{{ col }}</th></tr></thead>
+              <tbody>
+                <tr v-for="(row, i) in result.data" :key="i">
+                  <td v-for="col in dataColumns" :key="col" class="mono">{{ formatCell(row[col]) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SQL -->
+        <details class="card" open>
+          <summary class="card-title">SQL 查询</summary>
+          <pre>{{ result.sql }}</pre>
+        </details>
+
+        <!-- 执行步骤 -->
+        <details class="card">
+          <summary class="card-title">执行步骤</summary>
+          <ol style="margin-top: 10px; padding-left: 20px; font-size: 14px; color: #334155;">
+            <li v-for="(s, i) in result.steps" :key="i" style="margin-bottom: 4px;">{{ s }}</li>
+          </ol>
+        </details>
+      </div>
+
+      <div v-if="!result && !loading" class="empty">
+        输入一个问题开始分析
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+const LS_KEY = "sda_state_v1";
+
+function genSessionId() {
+  return "s_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+}
+
+function formatTime(ts) {
+  if (!ts) return "";
+  const d = new Date(ts);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+createApp({
+  setup() {
+    const question = ref("");
+    const loading = ref(false);
+    const errorMsg = ref("");
+
+    const datasources = ref([]);
+    const datasourceId = ref("");
+    const uploading = ref(false);
+    const fileInput = ref(null);
+
+    // { [dsId]: { sessionId, records: [{question, result, time}] } }
+    const history = ref({});
+    const activeIndex = ref(-1);
+
+    const currentDs = computed(() =>
+      datasources.value.find(d => d.id === datasourceId.value) || null
+    );
+
+    const currentRecords = computed(() => {
+      const bucket = history.value[datasourceId.value];
+      return bucket ? bucket.records : [];
+    });
+
+    const sessionId = computed(() => {
+      const bucket = history.value[datasourceId.value];
+      return bucket ? bucket.sessionId : "";
+    });
+
+    const result = computed(() => {
+      const idx = activeIndex.value;
+      const recs = currentRecords.value;
+      if (idx < 0 || idx >= recs.length) return null;
+      return recs[idx].result;
+    });
+
+    // Python 结果：兼容旧的字符串格式和新的结构化格式
+    const pyResult = computed(() => {
+      const r = result.value && result.value.python_result;
+      if (!r) return null;
+      if (typeof r === "string") {
+        return { type: "text", value: r };
+      }
+      return r;
+    });
+
+    const dataColumns = computed(() => {
+      if (!result.value || !result.value.data || !result.value.data.length) return [];
+      return Object.keys(result.value.data[0]);
+    });
+
+    function formatCell(v) {
+      if (v === null || v === undefined) return "";
+      if (typeof v === "number") {
+        return Number.isInteger(v)
+          ? v.toLocaleString()
+          : v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+      }
+      return String(v);
+    }
+
+    // ---------- 持久化 ----------
+    function saveState() {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(history.value));
+      } catch (e) {
+        console.warn("保存历史失败", e);
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (raw) history.value = JSON.parse(raw);
+      } catch (e) {
+        history.value = {};
+      }
+    }
+
+    function ensureSession(dsId) {
+      if (!dsId) return;
+      if (!history.value[dsId]) {
+        history.value[dsId] = { sessionId: genSessionId(), records: [] };
+        saveState();
+      }
+    }
+
+    // ---------- 数据源 ----------
+    async function loadDatasources() {
+      try {
+        const resp = await fetch("/datasources");
+        datasources.value = await resp.json();
+      } catch (e) {
+        errorMsg.value = "加载数据源失败：" + e.message;
+      }
+    }
+
+    function onDatasourceChange() {
+      ensureSession(datasourceId.value);
+      const recs = currentRecords.value;
+      activeIndex.value = recs.length > 0 ? recs.length - 1 : -1;
+    }
+
+    function newSession() {
+      const dsId = datasourceId.value;
+      if (!dsId) return;
+      history.value[dsId] = { sessionId: genSessionId(), records: [] };
+      activeIndex.value = -1;
+      saveState();
+    }
+
+    function selectRecord(i) {
+      activeIndex.value = i;
+    }
+
+    // ---------- 上传 / 删除 ----------
+    function triggerUpload() {
+      fileInput.value && fileInput.value.click();
+    }
+
+    async function onFileChange(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      uploading.value = true;
+      errorMsg.value = "";
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        const resp = await fetch("/datasources/upload", { method: "POST", body: form });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${resp.status}`);
+        }
+        const newDs = await resp.json();
+        await loadDatasources();
+        datasourceId.value = newDs.id;
+        onDatasourceChange();
+      } catch (e) {
+        errorMsg.value = "上传失败：" + e.message;
+      } finally {
+        uploading.value = false;
+        e.target.value = "";
+      }
+    }
+
+    async function deleteCurrentDs() {
+      if (!currentDs.value || currentDs.value.builtin) return;
+      if (!confirm(`确认删除数据源「${currentDs.value.name}」？该数据源的对话历史也会一并删除。`)) return;
+      try {
+        const resp = await fetch(`/datasources/${currentDs.value.id}`, { method: "DELETE" });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${resp.status}`);
+        }
+        delete history.value[currentDs.value.id];
+        saveState();
+        await loadDatasources();
+        datasourceId.value = datasources.value[0]?.id || "";
+        onDatasourceChange();
+      } catch (e) {
+        errorMsg.value = "删除失败：" + e.message;
+      }
+    }
+
+    // ---------- 提问 ----------
+    async function submit() {
+      const q = question.value.trim();
+      if (!q || loading.value || !datasourceId.value) return;
+
+      loading.value = true;
+      errorMsg.value = "";
+
+      try {
+        const resp = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question: q,
+            session_id: sessionId.value,
+            datasource_id: datasourceId.value,
+          }),
+        });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${resp.status}`);
+        }
+        const r = await resp.json();
+
+        ensureSession(datasourceId.value);
+        const bucket = history.value[datasourceId.value];
+        bucket.records.push({ question: q, result: r, time: Date.now() });
+        activeIndex.value = bucket.records.length - 1;
+        saveState();
+
+        if (r.error) {
+          errorMsg.value = "执行中出现问题：" + r.error;
+        }
+        question.value = "";
+      } catch (e) {
+        errorMsg.value = "请求失败：" + e.message;
+      } finally {
+        loading.value = false;
+      }
+    }
+
+    // ---------- 初始化 ----------
+    onMounted(async () => {
+      loadState();
+      await loadDatasources();
+      if (!datasourceId.value && datasources.value.length) {
+        datasourceId.value = datasources.value[0].id;
+      }
+      ensureSession(datasourceId.value);
+      const recs = currentRecords.value;
+      activeIndex.value = recs.length > 0 ? recs.length - 1 : -1;
+    });
+
+    return {
+      question, loading, errorMsg,
+      datasources, datasourceId, uploading, fileInput, currentDs,
+      currentRecords, sessionId, activeIndex, result, pyResult,
+      dataColumns, formatCell, formatTime,
+      submit, newSession, onDatasourceChange, selectRecord,
+      triggerUpload, onFileChange, deleteCurrentDs,
+    };
+  }
+}).mount("#app");
+</script>
+
+</body>
+</html>
