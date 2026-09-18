@@ -9,7 +9,6 @@
 ### Web 交互界面
 
 ![Web 界面](docs/img_web.png)
-![img.png](img.png)
 
 
 ## ✨ 功能特性
